@@ -18,7 +18,7 @@ enum LED_STATE {
 enum LED_NO {
 	LED_NO_0 = 0,
 	LED_NO_1 = 1,
-	LED_NO_2 = 2
+	BUZZER = 2
 };
 
 /*
@@ -54,4 +54,6 @@ uint8_t LED_ON(enum LED_NO led_no);
 uint8_t LED_OFF(enum LED_NO led_no);
 
 uint8_t LED_TOGGLE(enum LED_NO led_no);
+
+void buzzer(uint8_t freq, uint16_t time);
 #endif

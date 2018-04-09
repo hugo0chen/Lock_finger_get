@@ -6,29 +6,7 @@
 
 #define LORA_RECNUM_MAX 256
 
-/*lora 初始化参数定义*/
-#define   POWERVALUE       7
-#define   DATARATE				 2 
-//DATARATE rate
-// 0       0.3kbps,
-// 1       1.2kbps, //send max data about 2100ms 
-// 2       2.4kbps, //respond 1050ms
-// 3       4.8kbps,
-// 4       9.6kbps,
-// 5       19.2kbps,
-#if (DATARATE == 0)
-	#define LORA_SEND_MAX_TIMEOUT 85000
-#elif (DATARATE == 1)
-	#define LORA_SEND_MAX_TIMEOUT 2500
-#elif (DATARATE == 2)
-	#define LORA_SEND_MAX_TIMEOUT 1200
-#elif (DATARATE == 3)
-	#define LORA_SEND_MAX_TIMEOUT 800
-#elif (DATARATE == 4)
-	#define LORA_SEND_MAX_TIMEOUT 500
-#elif (DATARATE == 5)
-	#define LORA_SEND_MAX_TIMEOUT 300
-#endif
+#define LORA_SEND_MAX_TIMEOUT 2000
 
 #define REG_LR_FIFO                                  0x00 
  // Common settings

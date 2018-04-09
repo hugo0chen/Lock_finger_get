@@ -11,8 +11,8 @@
 #define UART1_RxBufferSize 900  //12+139*3=429 (128+2+9)*12 = 1668
 #define UART1_TxBufferSize 150   // 128+2+9 = 139
 
-#define UART2_TxBufferSize 60
-#define UART2_RxBufferSize 60
+#define UART2_TxBufferSize 900
+#define UART2_RxBufferSize 150
 
 /* User can use this section to tailor USARTx/UARTx instance used and associated resources */
 /* Definition for USARTx clock resources */
@@ -60,6 +60,8 @@ typedef struct{
 /* exported variables --------------------------------------------------------*/
 extern  uint8_t UART2_RxBuffer[UART2_RxBufferSize];
 extern  uint8_t UART1_RxBuffer[UART1_RxBufferSize];
+extern Rx_para usart1_rx_flag, usart2_rx_flag;
+extern UART_HandleTypeDef UartHandle1, UartHandle2;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/

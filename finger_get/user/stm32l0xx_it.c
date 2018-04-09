@@ -90,6 +90,7 @@ void HardFault_Handler(void)
   */
 void SVC_Handler(void)
 {
+	
 }
 
 /**
@@ -143,7 +144,7 @@ void PendSV_Handler(void){
 void EXTI4_15_IRQHandler(void){
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
 }
-//finger TouchOUT PA0
+//   ---   finger TouchOUT PA0
 void EXTI0_1_IRQHandler(void){
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }

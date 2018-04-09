@@ -375,11 +375,11 @@ ARM Macro Assembler    Page 6
               00000000 
 Command Line: --16 --debug --xref --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=
 interwork --depend=.\output\startup_stm32l051xx.d -o.\output\startup_stm32l051x
-x.o -IE:\Co_lander\gate_control\colander.lockcontrol\code\finger_get\RTE -I"D:\
-Developer tools\mdk5\ARM\PACK\Keil\STM32L0xx_DFP\1.6.1" -I"D:\Developer tools\m
-dk5\ARM\CMSIS\Include" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_V
-ERSION SETA 514" --predefine="STM32L051xx SETA 1" --list=.\output\startup_stm32
-l051xx.lst library\CMSIS\startup_stm32l051xx.s
+x.o -IE:\Co_lander\gate_control\colander_lockcontrol\code\Lock_finger_get\finge
+r_get\RTE -I"D:\Developer tools\mdk5\ARM\PACK\Keil\STM32L0xx_DFP\1.6.1" -I"D:\D
+eveloper tools\mdk5\ARM\CMSIS\Include" --predefine="__MICROLIB SETA 1" --predef
+ine="__UVISION_VERSION SETA 514" --predefine="STM32L051xx SETA 1" --list=.\outp
+ut\startup_stm32l051xx.lst library\CMSIS\startup_stm32l051xx.s
 
 
 

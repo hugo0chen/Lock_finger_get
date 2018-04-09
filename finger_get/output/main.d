@@ -39,6 +39,7 @@
 .\output\main.o: .\library\inc\stm32l0xx_hal_usart.h
 .\output\main.o: .\library\inc\stm32l0xx_hal_usart_ex.h
 .\output\main.o: .\library\inc\stm32l0xx_hal_wwdg.h
+.\output\main.o: user\main.h
 .\output\main.o: .\drivers\inc\led.h
 .\output\main.o: .\drivers\inc\spi.h
 .\output\main.o: .\drivers\inc\lowpower.h

@@ -36,19 +36,6 @@
 #define  PA_RXD_OUT()     HAL_GPIO_WritePin( LORA_TXEN_GPIO_PORT, LORA_TXEN_GPIO_PIN, GPIO_PIN_RESET );\
 													HAL_GPIO_WritePin( LORA_RXEN_GPIO_PORT, LORA_RXEN_GPIO_PIN, GPIO_PIN_SET );
                                             
-/*lora 初始化参数定义*/
-//#define   BW_FREQUENCY     7        //6-9
-//#define   SPREADINGFACTOR  12       //7-12
-//#define   CODINGRATE       1        //1-4
-#define   POWERVALUE       7
-#define   DATARATE				 4  
-//DATARATE rate
-// 0       0.3kbps,
-// 1       1.2kbps,
-// 2       2.4kbps,
-// 3       4.8kbps,
-// 4       9.6kbps,
-// 5       19.2kbps,
 const uint8_t  power_data[8] = { 0X80, 0X80, 0X80, 0X83, 0X86, 0x89, 0x8c, 0x8f};
 lpCtrlTypefunc_t lpTypefunc = {0,0,0,0};
 LORA_DATA_STRUCT lora_data;
@@ -148,10 +135,11 @@ uint8_t lora_RWByte(uint8_t data){
 	Input      : none
   return     : none 
 *************************************************************/
+// 不同系统时钟时，对应的延时函数需要修改，保证LORA单元RESET成功
 static void Delay1s(unsigned int ii){
    uint8_t j;
    while(ii--){
-     for(j=0;j<100;j++);
+     for(j = 0; j < 100;j++);
    }
 }
 void SX1276Reset(void){
@@ -484,9 +472,6 @@ static void SX1276LORA_INT(void){
 	 SX1276LoRaSetRFFrequency();								        //设置频率 434MHZ 
 	 SX1276LoRaSetRFPower(POWERVALUE);					        // 设置功率  
 	 SX1276_LoRa_SetDataRate(DATARATE);   
-//   SX1276LoRaSetSpreadingFactor(SPREADINGFACTOR);	    // 扩频因子设置
-//   SX1276LoRaSetErrorCoding(CODINGRATE);		          //有效数据比
-//   SX1276LoRaSetSignalBandwidth( BW_FREQUENCY );	    //设置扩频带宽 
 	 SX1276LoRaSetPacketCrcOn(True);			              //CRC 校验打开
    SX1276LoRaSetImplicitHeaderOn(False);		          //同步头是显性模式
    SX1276LoRaSetPayloadLength( 0xff);									//最大payload length 255
@@ -574,9 +559,11 @@ void RF_SLEEP(void){
 static uint8_t lora_tx_with_timeout(uint8_t* data, uint16_t len, uint32_t timeOut){
 		lora_data.lora_send_flag = 0;
 		lora_data.lora_send_tickTime = local_ticktime();
+		HAL_NVIC_DisableIRQ((IRQn_Type)EXTI0_1_IRQn); 
 		FUN_RF_SENDPACKET(data, len);
 		while(lora_data.lora_send_flag == 0){
 			if(timeout(lora_data.lora_send_tickTime, timeOut)){
+				HAL_NVIC_EnableIRQ((IRQn_Type)EXTI0_1_IRQn);
 				return 1;
 			}
 		}
@@ -600,10 +587,8 @@ uint8_t Lora_Send(uint8_t *p_send_buf, uint16_t len){
 				return 1;
 			p += LORA_MAX_TX_NUM;
 		}
-		Delay_nms(200);
 		if(lora_tx_with_timeout(p, pkt_remain, LORA_SEND_MAX_TIMEOUT))
 			return 1;	
-		Delay_nms(400);
 	}
 	return 0;
 }
@@ -690,7 +675,7 @@ void SX1276_LoRa_SetDataRate( uint8_t rate ){
         SX1276WriteBuffer( REG_LR_MODEMCONFIG3, DEF_LR_MODEMCONFIG3 );  //Regs 0x26, Low Data Rata Optimization Disabled
     }
     else{
-		SX1276WriteBuffer( REG_LR_MODEMCONFIG3, 0x08 );  //Regs 0x26, Low Data Rata Optimization Enabled
+			SX1276WriteBuffer( REG_LR_MODEMCONFIG3, 0x08 );  //Regs 0x26, Low Data Rata Optimization Enabled
     }
     if( ( rate == 2 ) || ( rate == 4 ) || ( rate == 5 ) ){
         SX1276WriteBuffer( 0x36, 0x02 );

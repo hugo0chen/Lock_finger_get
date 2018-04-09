@@ -43,3 +43,5 @@
 .\output\finger.o: .\app\inc\GlobalVar.h
 .\output\finger.o: .\drivers\inc\usart.h
 .\output\finger.o: D:\Developer tools\mdk5\ARM\ARMCC\Bin\..\include\string.h
+.\output\finger.o: .\drivers\inc\delay.h
+.\output\finger.o: .\drivers\inc\led.h

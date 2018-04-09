@@ -41,3 +41,4 @@
 .\output\led.o: .\library\inc\stm32l0xx_hal_usart_ex.h
 .\output\led.o: .\library\inc\stm32l0xx_hal_wwdg.h
 .\output\led.o: D:\Developer tools\mdk5\ARM\ARMCC\Bin\..\include\string.h
+.\output\led.o: .\drivers\inc\delay.h

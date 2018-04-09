@@ -1,6 +1,8 @@
 #include "finger.h"
 #include "usart.h"
 #include "string.h"
+#include "delay.h"
+#include "led.h"
 
 extern UPDOWNLOADBUF up_download_finger;
 FINGER_PARA finger;
@@ -8,8 +10,15 @@ FINGER_FSM_STRUCT finger_fsm = {FSM_IDLE, STA_IDLE};
 FINGER_COMMUNICATION finger_com;
 FINGER_LIB finger_lib = {FINGER_LIB_START_POSITION, 0, UMATCH};
 
-extern void finger_module_upper_callBack(void);
-extern void call_failed_callback(uint8_t res);
+extern void finger_callback(uint8_t res);
+
+uint8_t finger_cmd_wait_timeOut(enum Finger_Register sta){
+	if((sta == UPCHAR_STA) ||sta == DOWNCHAR_STA ){
+		return timeout(finger_com.response_ack_tickTime, FIGNER_COM_DATA_TIME);
+	}else{
+		return timeout(finger_com.response_ack_tickTime, FINGER_COM_ACK_TIME);
+	}
+}
 
 void init_finger(void){
 	
@@ -253,7 +262,6 @@ void sendData_downchar(uint8_t* buf, uint16_t buf_len){
 	send_to_finger(PID_DATA, p, pkt_remain);
 }
 
-//todo
 uint16_t fingerSearchFrame(uint8_t* data, uint16_t len) {
 	uint16_t i;
 	
@@ -274,6 +282,7 @@ uint16_t fingerSearchFrame(uint8_t* data, uint16_t len) {
 void finger_processCMD(void){
 	//todo
 }
+
 void finger_processACK(void){
 	switch(finger.command){
 		case GETIMG:
@@ -287,38 +296,45 @@ void finger_processACK(void){
 				}else{
 					finger_fsm.sta = STA_IDLE;
 					finger.command = NO_CMD;
-					call_failed_callback(0);
+					finger_callback(0);
 				}
 			}
 			break;
 		case GENCHAR:			
 			if(finger.character_buf[0] == 0){ 	
-				finger_com.cmd_retry_times = 0;				
-				if(finger_fsm.sta == GENCHAR1_STA) {
-					finger_fsm.sta = STA_IDLE;	
-					call_failed_callback(1);
-				}
-				else if(finger_fsm.sta == GENCHAR2_STA) {
-					finger_fsm.sta = REGMODEL_STA;					
-				}
-				else{
-					finger_fsm.sta = STA_IDLE;
-					finger.command = NO_CMD;					
-					call_failed_callback(0);
+				finger_com.cmd_retry_times = 0;	
+				if(finger_fsm.fsm == REGISTER_UPPER_FSM){
+					if(finger_fsm.sta == GENCHAR1_STA) {
+						finger_fsm.sta = STA_IDLE;	
+						finger_callback(1);
+					}
+					else if(finger_fsm.sta == GENCHAR2_STA) {
+						finger_fsm.sta = REGMODEL_STA;					
+					}
+					else{
+						finger_fsm.sta = STA_IDLE;
+						finger.command = NO_CMD;					
+						finger_callback(0);
+					}
+				}else if(finger_fsm.fsm == MATCH_LOCAL_FSM){
+					if(finger_fsm.sta == GENCHAR1_STA) {
+						finger_fsm.sta = SEARCH_STA;																				
+					}					
+					else{
+						finger_fsm.sta = STA_IDLE;
+						finger.command = NO_CMD;						
+					}
 				}
 			}
 			break;
-		case REGMODEL:			
+		case REGMODEL:
 			if(finger.character_buf[0] == 0){ 		
-				finger_com.cmd_retry_times = 0;
-				if(finger_fsm.fsm == REGISTER_LOCAL){
-					finger_fsm.sta = STORECHAR_STA;
-				}
-				else if(finger_fsm.fsm == REGISTER_UPPER){
+				finger_com.cmd_retry_times = 0; 
+				if(finger_fsm.fsm == REGISTER_UPPER_FSM){
 					finger_fsm.sta = UPCHAR_STA;
 				}else{
 					finger_fsm.sta = STA_IDLE;
-					call_failed_callback(0);
+					finger_callback(0);
 				}
 			}
 			break;
@@ -328,25 +344,34 @@ void finger_processACK(void){
 				up_download_finger.receive_data_flag = 1;
 				up_download_finger.buf_size = 0;
 				finger_fsm.sta = STA_IDLE;
-				call_failed_callback(2);
+				finger_callback(2);
 			}
 			break;
+		case STORE:			
+			if(finger.character_buf[0] == 0){				
+				finger_com.cmd_retry_times = 0;				
+				finger_fsm.sta = STA_IDLE;
+				finger_fsm.fsm = MATCH_LOCAL_FSM;
+			}			
+			break;
+		case SEARCH_CMD:
+			if(finger.character_size == 5){
+				if(finger.character_buf[0] == 0){
+					finger_callback(3);
+				}else{
+					finger_callback(4);
+				}
+				finger_fsm.sta = STA_IDLE;
+				finger_fsm.fsm = FSM_IDLE;
+			}
+			break;			
 		default: 
 			break;
 	}
 }
 
 void finger_processEND(void){
-	if(up_download_finger.receive_data_flag == 1){
-		if(finger.pkt_num++ <= 6 ){
-			for(uint16_t i = 0; i < finger.character_size; i++){
-				up_download_finger.up_download_fingerModelBuff[up_download_finger.buf_size++] = finger.character_buf[i];				
-			}
-			if(finger.pkt_num == 6){				
-				finger_module_upper_callBack();
-			}
-		}
-	}
+	finger_fsm.sta = STORECHAR_STA;
 }
 
 void finger_processDATA(void){
@@ -354,12 +379,16 @@ void finger_processDATA(void){
 		finger.pkt_num++;
 		if(finger.pkt_num <= 6 ){
 			for(uint16_t i = 0; i < finger.character_size; i++){
-				up_download_finger.up_download_fingerModelBuff[up_download_finger.buf_size++] = finger.character_buf[i];				
+				up_download_finger.finger_module_buf[up_download_finger.buf_size++] = finger.character_buf[i];				
 			}
-			if(finger.pkt_num == 6){				
-				finger_module_upper_callBack();
+			if(finger.pkt_num == 6){
+				LED_ON( LED_NO_1);	
+				finger.pkt_num = 0;	
+				up_download_finger.finger_get_step = 0;
+				up_download_finger.receive_data_flag = 0;
+				finger_fsm.sta = STORECHAR_STA;
 			}
 		}
 	}
 }
-
+//---   end   ---
